@@ -3,8 +3,8 @@ from abc import ABC, abstractmethod
 class GenericOptimizer(ABC):
     @abstractmethod
     def __init__(self) -> None:
-        pass
+        return NotImplementedError
 
     @abstractmethod
-    def optimize(self, f, x0) -> None:
-        pass
+    def optimize(self) -> None:
+        return NotImplementedError
