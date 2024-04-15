@@ -6,5 +6,5 @@ class GenericOptimizer(ABC):
         return NotImplementedError
 
     @abstractmethod
-    def optimize(self) -> None:
+    def optimize(self, delta:float) -> None:
         return NotImplementedError
