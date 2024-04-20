@@ -31,9 +31,9 @@ class GameOptimizer(GenericOptimizer):
 
 
         # Run the game executable from game_location with the parameters
-        # TODO use self.ingame_instance_count to run multiple instances of the game in parallel (using CL arguments)
         subprocess.run([self.game_location, f"-ngames={self.ingame_instance_count}", "-visible=false"]) # TODO we can parallelize this by running multiple instances of the game with different parameters?
         # TODO think about when to stop the game? can use _on_time_out_timeout() in Godot to get_tree().quit()
+        
         # + write final results for each instance to logs_location  (in Godot)
         
         # gather results from logs_location and put in result array
