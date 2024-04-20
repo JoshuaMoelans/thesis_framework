@@ -16,7 +16,6 @@ class GameOptimizer(GenericOptimizer):
         self.input_location = input_location
         self.logs_location = logs_location
         self.ingame_instance_count = ingame_instance_count # can be used to run multiple instances of the game in parallel;
-        # TODO check https://forum.godotengine.org/t/how-can-i-run-my-game-with-parameters-command-line-arguments/23263/2 to dynamically set parameters in Godot
 
     def run(self, parameters:dict) -> float:
         """ runs the game with the given parameters
@@ -33,7 +32,7 @@ class GameOptimizer(GenericOptimizer):
 
         # Run the game executable from game_location with the parameters
         # TODO use self.ingame_instance_count to run multiple instances of the game in parallel (using CL arguments)
-        subprocess.run([self.game_location]) # TODO we can parallelize this by running multiple instances of the game with different parameters?
+        subprocess.run([self.game_location, f"-ngames={self.ingame_instance_count}", "-visible=false"]) # TODO we can parallelize this by running multiple instances of the game with different parameters?
         # TODO think about when to stop the game? can use _on_time_out_timeout() in Godot to get_tree().quit()
         # + write final results for each instance to logs_location  (in Godot)
         
