@@ -1,4 +1,5 @@
 from GenericOptimizer import GenericOptimizer
+from Parameters import Parameters
 import subprocess
 import os
 
@@ -16,20 +17,7 @@ class GameOptimizer(GenericOptimizer):
         self.game_location = game_location
         self.logs_location = logs_location
         self.ingame_instance_count = ingame_instance_count # can be used to run multiple instances of the game in parallel;
-        self.parameters = { # TODO define more parameters
-            "communication_count" : { # the number of 'close' units an attack is communicated to
-                "type" : "int",
-                "min" : 0,
-                "max" : 10,
-                "value" : 1
-            },
-            "communication_delay" : { # the delay in seconds before an attack is communicated to 'close' units
-                "type" : "float",
-                "min" : 0.0,
-                "max" : 5.0,
-                "value" : 1.5
-            },
-        }
+        self.parameters = Parameters() # TODO think about setting up parameters? Is it OK to do this in Parameters.py?
 
     def clean_logs(self):
         """cleans out the logs_location directory
@@ -54,7 +42,13 @@ class GameOptimizer(GenericOptimizer):
         self.clean_logs() # clean out logs_location directory
 
         # Run the game executable from game_location with the parameters as CL arguments
-        subprocess.run([self.game_location, f"-ngames={self.ingame_instance_count}", "-visible=false"]) # TODO we can parallelize this by running multiple instances of the game with different parameters?
+        # TODO we can parallelize this by running multiple instances of the game with different parameters? not sure if this speeds up learning
+        subprocess.run([self.game_location,
+                         f"-ngames={self.ingame_instance_count}",
+                          "-visible=true", # TODO make this parameter? think in training can be false
+                        f"communication_count={self.parameters.communication_count}",
+                        f"communication_delay={self.parameters.communication_delay}"
+                        ])
         # TODO think about when to stop the game? can use _on_time_out_timeout() in Godot to get_tree().quit()
         
         # + write final results for each instance to logs_location  (in Godot)
