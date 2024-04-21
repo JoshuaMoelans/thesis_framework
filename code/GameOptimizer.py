@@ -16,6 +16,20 @@ class GameOptimizer(GenericOptimizer):
         self.game_location = game_location
         self.logs_location = logs_location
         self.ingame_instance_count = ingame_instance_count # can be used to run multiple instances of the game in parallel;
+        self.parameters = { # TODO define more parameters
+            "communication_count" : { # the number of 'close' units an attack is communicated to
+                "type" : "int",
+                "min" : 0,
+                "max" : 10,
+                "value" : 1
+            },
+            "communication_delay" : { # the delay in seconds before an attack is communicated to 'close' units
+                "type" : "float",
+                "min" : 0.0,
+                "max" : 5.0,
+                "value" : 1.5
+            },
+        }
 
     def clean_logs(self):
         """cleans out the logs_location directory
