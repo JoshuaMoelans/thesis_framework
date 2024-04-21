@@ -1,8 +1,9 @@
 from GenericOptimizer import GenericOptimizer
 import subprocess
+import os
 
 class GameOptimizer(GenericOptimizer):
-    def __init__(self, game_location:str, input_location:str, logs_location:str, ingame_instance_count:int = 4):
+    def __init__(self, game_location:str, logs_location:str, ingame_instance_count:int = 4):
         """
         Initializes the GameOptimizer class.
 
@@ -13,9 +14,18 @@ class GameOptimizer(GenericOptimizer):
         """
         super().__init__()
         self.game_location = game_location
-        self.input_location = input_location
         self.logs_location = logs_location
         self.ingame_instance_count = ingame_instance_count # can be used to run multiple instances of the game in parallel;
+
+    def clean_logs(self):
+        """cleans out the logs_location directory
+        """
+        for file in os.listdir(self.logs_location):
+            file_path = os.path.join(self.logs_location, file)
+            if os.path.isfile(file_path):
+                os.remove(file_path)
+            elif os.path.isdir(file_path):
+                os.rmdir(file_path)
 
     def run(self, parameters:dict) -> float:
         """ runs the game with the given parameters
@@ -27,19 +37,25 @@ class GameOptimizer(GenericOptimizer):
             float: scoring of the game
         """
         print("Running game...")
-        # set the parameters in the input_location
+        self.clean_logs() # clean out logs_location directory
 
-
-        # Run the game executable from game_location with the parameters
+        # Run the game executable from game_location with the parameters as CL arguments
         subprocess.run([self.game_location, f"-ngames={self.ingame_instance_count}", "-visible=false"]) # TODO we can parallelize this by running multiple instances of the game with different parameters?
         # TODO think about when to stop the game? can use _on_time_out_timeout() in Godot to get_tree().quit()
         
         # + write final results for each instance to logs_location  (in Godot)
         
         # gather results from logs_location and put in result array
-
-        result = []
-        return self.score(result)
+        # loop over files in logs_location
+        results = []
+        for file in os.listdir(self.logs_location):
+            file_path = os.path.join(self.logs_location, file)
+            if os.path.isfile(file_path):
+                # TODO check file name to find final results for each instance (e.g. "instance_1_results.txt")
+                with open(file_path, "r") as f:
+                    # TODO read the file and put in result array
+                    pass
+        return self.score(results)
 
 
     def score_game(self, game_results:dict) -> float:
@@ -82,6 +98,11 @@ class GameOptimizer(GenericOptimizer):
             delta (float, optional): minimal change required to keep adjusting parameters. Defaults to 0.1.
         """
         print("Optimizing game...")
-        # Do some optimization here
-        self.run({})
+        score:float = 0.0
+        while True:
+            # Do some optimization here
+            new_score = self.run({}) # TODO pass (updated) parameters
+            if abs(new_score - score) < delta: # TODO make sure this is a good stopping criterion
+                break
+            score = new_score
         print("Game optimized!")
