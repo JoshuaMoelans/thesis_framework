@@ -19,8 +19,26 @@ class GenericParameter:
 
 class Parameters:
     def __init__(self):
-        self.communication_count = GenericParameter(type_="int", min_=0, max_=10, value=3)
-        self.communication_delay = GenericParameter(type_="float", min_=0.0, max_=5.0, value=0.2)
+        self.communication_count = GenericParameter(type_="int", min_=0, max_=10, value=1)
+        self.communication_delay = GenericParameter(type_="float", min_=0.0, max_=5.0, value=1.5)
 
     def __getattr__(self, name):
         return getattr(self, name).value
+    
+    def __setattr__(self, name, value):
+        if name in self.__dict__:
+            getattr(self, name).value = value
+        else:
+            self.__dict__[name] = value
+    
+    def size(self):
+        return len(self.__dict__)
+    
+    def get_lower_bounds(self):
+        return [getattr(self, key).min for key in self.__dict__]
+    
+    def get_upper_bounds(self):
+        return [getattr(self, key).max for key in self.__dict__]
+    
+    def get_initial_values(self):
+        return [getattr(self, key).value for key in self.__dict__]
