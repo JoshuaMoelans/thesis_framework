@@ -4,23 +4,32 @@ This repository holds the optimizer framework as proposed in my Master Thesis. I
 
 ## Table of Contents
 
-- [Installation](#installation)
-- [Usage](#usage)
-- [Contributing](#contributing)
-- [License](#license)
+- [Master Thesis | Optimizer Framework](#master-thesis--optimizer-framework)
+  - [Table of Contents](#table-of-contents)
+  - [Installation](#installation)
+  - [Usage](#usage)
+  - [License](#license)
 
 ## Installation
 
-Instructions on how to install and set up the project.
+The in-game optimizer uses NLopt, so it is advised to install this in a virtual environment. To do this, run the following commands:
+
+```bash
+    python3 -m venv venv
+    source venv/bin/activate
+    pip install -r ./code/requirements.txt
+```
 
 ## Usage
 
-Examples and instructions on how to use the project.
+Running the example code can be done by running the following command:
 
-## Contributing
+```bash
+    python main.py
+```
 
-Guidelines for contributing to the project.
+Adapting the parameters for the Game optimizer should be done inside the `Parameters.py` file. This allows you to set minimum and maximum values for the parameters, as well as the type. The optimization code itself is located in the `GameOptimizer.py` file. There you can set the NLopt optimization algorithm (currently using COBYLA) as well as the stopping criterion and objective function (by changing how the `score_game(...)` method calculates it).
+
 
 ## License
 
-Information about the project's license.

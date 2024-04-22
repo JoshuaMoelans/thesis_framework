@@ -112,6 +112,7 @@ class GameOptimizer(GenericOptimizer):
         """
         # update self.parameters with x
         # TODO measure iteration times to show graph?
+        # TODO do we need to match parameter types? (e.g. int, float) can use rounding OR penalty function
         for i in range(self.parameters.size()):
             setattr(self.parameters, self.paramnames[i], x[i])
         return self.run()
@@ -142,9 +143,10 @@ class GameOptimizer(GenericOptimizer):
         start_time = time.time()
         # NLopt setup
         opt = nlopt.opt(nlopt.LN_COBYLA, self.parameters.size())
+        # TODO set nonlinear constraints for parameter types (https://nlopt.readthedocs.io/en/latest/NLopt_Python_Reference/#nonlinear-constraints)
         opt.set_lower_bounds(self.parameters.get_lower_bounds())
         opt.set_upper_bounds(self.parameters.get_upper_bounds())
-        opt.set_min_objective(self.obj_func)
+        opt.set_max_objective(self.obj_func)
         opt.set_xtol_rel(1e-4) # TODO figure out what this does
 
         # NLopt optimization
