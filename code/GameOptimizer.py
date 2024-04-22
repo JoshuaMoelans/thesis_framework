@@ -1,6 +1,6 @@
 import time
 from GenericOptimizer import GenericOptimizer
-from Parameters import GameParameters
+from GameParameters import GameParameters
 from numpy import *
 import subprocess
 import os

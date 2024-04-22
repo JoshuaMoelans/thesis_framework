@@ -41,8 +41,3 @@ class GenericParameters:
     
     def get_initial_values(self):
         return [getattr(self, key).value for key in self.__dict__]
-    
-class GameParameters(GenericParameters):
-    def __init__(self):
-        self.communication_count = GenericParameter(type_="int", min_=0, max_=10, value=1)
-        self.communication_delay = GenericParameter(type_="float", min_=0.0, max_=5.0, value=1.5)
