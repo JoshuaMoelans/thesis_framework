@@ -1,3 +1,4 @@
+import json
 import time
 from GenericOptimizer import GenericOptimizer
 from GameParameters import GameParameters
@@ -67,9 +68,19 @@ class GameOptimizer(GenericOptimizer):
                         continue  # Skip this file if its instance has been processed (alphabetically; GAMEOVER has priority over TIMEOUT)
                     print("file_path:", file_path)
                     with open(file_path, "r") as f:
-                        results[instance_number] = f.read()
+                        results[instance_number] = self.string_to_json(f.read())
         return self.score(results)
 
+    def string_to_json(self, string:str) -> dict:
+        """converts a string to a json object
+
+        Args:
+            string (str): string to convert
+
+        Returns:
+            dict: json object
+        """
+        return json.loads(string)
 
     def score_game(self, game_results:dict) -> float:
         """scores the results of the game; 
