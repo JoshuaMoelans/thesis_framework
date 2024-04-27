@@ -48,13 +48,13 @@ class GameOptimizer(GenericOptimizer):
 
         # Run the game executable from game_location with the parameters as CL arguments
         # TODO we can parallelize this by running multiple instances of the game with different parameters? not sure if this speeds up learning
-        # subprocess.run([self.game_location,
-        #                  f"ngames={self.ingame_instance_count}",
-        #                  f"timeout={self.timeout}",
-        #                   "visible=true", # TODO make this parameter? think in training can be false
-        #                 f"communication_count={self.parameters.communication_count}",
-        #                 f"communication_delay={self.parameters.communication_delay}"
-        #                 ])
+        subprocess.run([self.game_location,
+                         f"ngames={self.ingame_instance_count}",
+                         f"timeout={self.timeout}",
+                          "visible=true", # TODO make this parameter? think in training can be false
+                        f"communication_count={self.parameters.communication_count}",
+                        f"communication_delay={self.parameters.communication_delay}"
+                        ])
         
         # gather results from logs_location and put in result array
         # loop over files in logs_location
@@ -86,6 +86,8 @@ class GameOptimizer(GenericOptimizer):
         """scores the results of the game; 
         do this here to more easily change scoring function (instead of baking it into the game)
 
+        the score should be BETTER if LOWER (since we are minimizing the objective function)
+
         Args:
             game_results (dict): dictionary containing data gathered from game run
 
@@ -95,14 +97,17 @@ class GameOptimizer(GenericOptimizer):
         print("Scoring game...")
         score:float = 0.0
         # TODO weighted score of different metrics found in log
+        score += game_results["team_damage"]["allies"]
         return score
     
-    def score(self, results: list[dict]) -> float:
+    def score(self, results:dict) -> float:
         """scores the results of the game; 
         do this here to more easily change scoring function (instead of baking it into the game)
 
+        the score should be BETTER if LOWER (since we are minimizing the objective function)
+
         Args:
-            results (list[dict]): list of dictionaries containing data gathered from all game runs
+            results (dict): dictionary containing data gathered from all game runs
 
         Returns:
             float: scoring of all the games for given set of parameters
@@ -110,7 +115,7 @@ class GameOptimizer(GenericOptimizer):
         print("Scoring game...")
         score:float = 0.0
         # TODO weighted score?
-        for instance_result in results:
+        for instance_result in results.values():
             score += self.score_game(instance_result)
         return score
     
