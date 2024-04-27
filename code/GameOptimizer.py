@@ -8,7 +8,7 @@ import os
 import nlopt
 
 class GameOptimizer(GenericOptimizer):
-    def __init__(self, game_location:str, logs_location:str, ingame_instance_count:int = 4):
+    def __init__(self, game_location:str, logs_location:str, ingame_instance_count:int = 4, timeout:int = 60):
         """
         Initializes the GameOptimizer class.
 
@@ -16,10 +16,13 @@ class GameOptimizer(GenericOptimizer):
         - game_location (str): The location of the game executable.
         - input_location (str): The location of input files; used to set parameters for game run.
         - logs_location (str): The location to store logs; used to retrieve data from game run.
+        - ingame_instance_count (int): The number of instances of the game to run in parallel.
+        - timeout (int): The maximum time (seconds) to wait for a game instance to finish.
         """
         self.game_location = game_location
         self.logs_location = logs_location
         self.ingame_instance_count = ingame_instance_count # can be used to run multiple instances of the game in parallel;
+        self.timeout = timeout
         self.parameters = GameParameters() # TODO think about setting up parameters? Is it OK to do this in Parameters.py?
         self.paramnames = [key for key in self.parameters.__dict__] # indexable list of parameter names
 
@@ -40,30 +43,31 @@ class GameOptimizer(GenericOptimizer):
             float: scoring of the game
         """
         print("Running game...")
-        self.clean_logs() # clean out logs_location directory
+        # self.clean_logs() # clean out logs_location directory
 
         # Run the game executable from game_location with the parameters as CL arguments
         # TODO we can parallelize this by running multiple instances of the game with different parameters? not sure if this speeds up learning
         # subprocess.run([self.game_location,
-        #                  f"-ngames={self.ingame_instance_count}",
-        #                   "-visible=true", # TODO make this parameter? think in training can be false
+        #                  f"ngames={self.ingame_instance_count}",
+        #                  f"timeout={self.timeout}",
+        #                   "visible=true", # TODO make this parameter? think in training can be false
         #                 f"communication_count={self.parameters.communication_count}",
         #                 f"communication_delay={self.parameters.communication_delay}"
         #                 ])
-        # TODO think about when to stop the game? can use _on_time_out_timeout() in Godot to get_tree().quit()
-        
-        # + write final results for each instance to logs_location  (in Godot)
         
         # gather results from logs_location and put in result array
         # loop over files in logs_location
-        results = []
-        for file in os.listdir(self.logs_location):
+        results = {}
+        for file in sorted(os.listdir(self.logs_location)):
             file_path = os.path.join(self.logs_location, file)
             if os.path.isfile(file_path):
-                # TODO check file name to find final results for each instance (e.g. "instance_1_results.txt")
-                with open(file_path, "r") as f:
-                    # TODO read the file and put in result array
-                    pass
+                if "TIMEOUT" in file or "GAMEOVER" in file: # check if file is a game result
+                    instance_number = file.split('_')[2]  # Extract instance number from file name
+                    if instance_number in results:
+                        continue  # Skip this file if its instance has been processed (alphabetically; GAMEOVER has priority over TIMEOUT)
+                    print("file_path:", file_path)
+                    with open(file_path, "r") as f:
+                        results[instance_number] = f.read()
         return self.score(results)
 
 
@@ -110,9 +114,10 @@ class GameOptimizer(GenericOptimizer):
             _type_: scoring of the current iteration
         """
         # update self.parameters with x
-        # TODO measure iteration times to show graph?
+        # TODO measure iteration times to show data on graph?
         # TODO do we need to match parameter types? (e.g. int, float) can use rounding OR penalty function
         for i in range(self.parameters.size()):
+            print("setting", self.paramnames[i], "to", x[i])
             setattr(self.parameters, self.paramnames[i], x[i])
         return self.run()
     
