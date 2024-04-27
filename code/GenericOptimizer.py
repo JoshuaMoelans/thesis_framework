@@ -46,6 +46,7 @@ class GenericOptimizer(ABC):
         # TODO set nonlinear constraints for parameter types (https://nlopt.readthedocs.io/en/latest/NLopt_Python_Reference/#nonlinear-constraints)
         opt.set_lower_bounds(self.parameters.get_lower_bounds())
         opt.set_upper_bounds(self.parameters.get_upper_bounds())
+        opt.set_initial_step(self.parameters.get_step_size())
         opt.set_min_objective(self.obj_func) # minimize objective function
         opt.set_xtol_rel(delta) # relative tolerance on parameters
 

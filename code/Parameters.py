@@ -1,5 +1,5 @@
 class GenericParameter:
-    def __init__(self, type_, min_, max_, value):
+    def __init__(self, type_, min_, max_, value, step_size):
         """Sets up the parameter with the given type, min, max, and value.
 
         Args:
@@ -7,11 +7,13 @@ class GenericParameter:
             min_ (_type_): defines the minimum value of the parameter
             max_ (_type_): defines the maximum value of the parameter
             value (_type_): defines the current value of the parameter
+            step_size (_type_): defines the step size for the parameter
         """
         self.ptype = type_
         self.min = min_
         self.max = max_
         self.value = value
+        self.step_size = step_size
 
     def __repr__(self):
         return str(self.value)
@@ -44,3 +46,6 @@ class GenericParameters:
     
     def get_initial_values(self):
         return [getattr(self, key).value for key in self.__dict__]
+    
+    def get_step_size(self):
+        return [getattr(self, key).step_size for key in self.__dict__]
