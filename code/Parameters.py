@@ -33,6 +33,9 @@ class GenericParameters:
     def size(self):
         return len(self.__dict__)
     
+    def get_param_types(self):
+        return [getattr(self, key).ptype for key in self.__dict__]
+    
     def get_lower_bounds(self):
         return [getattr(self, key).min for key in self.__dict__]
     

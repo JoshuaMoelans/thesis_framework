@@ -37,6 +37,20 @@ class GameOptimizer(GenericOptimizer):
             elif os.path.isdir(file_path):
                 os.rmdir(file_path)
 
+    def store_results(self) -> dict:
+        results = {}
+        for file in sorted(os.listdir(self.logs_location)):
+                    file_path = os.path.join(self.logs_location, file)
+                    if os.path.isfile(file_path):
+                        if "TIMEOUT" in file or "GAMEOVER" in file: # check if file is a game result
+                            instance_number = file.split('_')[2]  # Extract instance number from file name
+                            if instance_number in results:
+                                continue  # Skip this file if its instance has been processed (alphabetically; GAMEOVER has priority over TIMEOUT)
+                            print("file_path:", file_path)
+                            with open(file_path, "r") as f:
+                                results[instance_number] = self.string_to_json(f.read())
+        return results
+
     def run(self) -> float:
         """ runs the game with the stored internal parameters
 
@@ -44,31 +58,21 @@ class GameOptimizer(GenericOptimizer):
             float: scoring of the game
         """
         print("Running game...")
-        # self.clean_logs() # clean out logs_location directory
+        self.clean_logs() # clean out logs_location directory
 
         # Run the game executable from game_location with the parameters as CL arguments
         # TODO we can parallelize this by running multiple instances of the game with different parameters? not sure if this speeds up learning
         subprocess.run([self.game_location,
                          f"ngames={self.ingame_instance_count}",
                          f"timeout={self.timeout}",
-                          "visible=true", # TODO make this parameter? think in training can be false
+                          "visible=false", # TODO make this parameter? think in training can be false
                         f"communication_count={self.parameters.communication_count}",
                         f"communication_delay={self.parameters.communication_delay}"
                         ])
         
         # gather results from logs_location and put in result array
         # loop over files in logs_location
-        results = {}
-        for file in sorted(os.listdir(self.logs_location)):
-            file_path = os.path.join(self.logs_location, file)
-            if os.path.isfile(file_path):
-                if "TIMEOUT" in file or "GAMEOVER" in file: # check if file is a game result
-                    instance_number = file.split('_')[2]  # Extract instance number from file name
-                    if instance_number in results:
-                        continue  # Skip this file if its instance has been processed (alphabetically; GAMEOVER has priority over TIMEOUT)
-                    print("file_path:", file_path)
-                    with open(file_path, "r") as f:
-                        results[instance_number] = self.string_to_json(f.read())
+        results = self.store_results()
         return self.score(results)
 
     def string_to_json(self, string:str) -> dict:
@@ -133,8 +137,11 @@ class GameOptimizer(GenericOptimizer):
         # TODO measure iteration times to show data on graph?
         # TODO do we need to match parameter types? (e.g. int, float) can use rounding OR penalty function
         for i in range(self.parameters.size()):
-            print("setting", self.paramnames[i], "to", x[i])
-            setattr(self.parameters, self.paramnames[i], x[i])
+            paramval = x[i]
+            if self.parameters.get_param_types()[i] == "int":
+                paramval = round(paramval)
+            print("setting", self.paramnames[i], "to", paramval)
+            setattr(self.parameters, self.paramnames[i], paramval)
         return self.run()
     
     def optimize(self, delta:float = 0.01):
