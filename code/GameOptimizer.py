@@ -1,5 +1,7 @@
 import json
 import time
+
+from matplotlib import pyplot as plt
 from GenericOptimizer import GenericOptimizer
 from GameParameters import GameParameters
 from numpy import *
@@ -24,8 +26,11 @@ class GameOptimizer(GenericOptimizer):
         self.logs_location = logs_location
         self.ingame_instance_count = ingame_instance_count # can be used to run multiple instances of the game in parallel;
         self.timeout = timeout
-        self.parameters = GameParameters() # TODO think about setting up parameters? Is it OK to do this in Parameters.py?
+        self.parameters = GameParameters()
         self.paramnames = [key for key in self.parameters.__dict__] # indexable list of parameter names
+        # set up data collection
+        self.data = [] # keep track of data for graphing; one entry per iteration
+        self.parameter_evolution = [] # keep track of parameter values for graphing; one entry per iteration
 
     def clean_logs(self):
         """cleans out the logs_location directory
@@ -48,7 +53,7 @@ class GameOptimizer(GenericOptimizer):
                                 continue  # Skip this file if its instance has been processed (alphabetically; GAMEOVER has priority over TIMEOUT)
                             print("file_path:", file_path)
                             with open(file_path, "r") as f:
-                                results[instance_number] = self.string_to_json(f.read())
+                                results[instance_number] = json.loads(f.read())
         return results
 
     def run(self) -> float:
@@ -74,17 +79,6 @@ class GameOptimizer(GenericOptimizer):
         # loop over files in logs_location
         results = self.store_results()
         return self.score(results)
-
-    def string_to_json(self, string:str) -> dict:
-        """converts a string to a json object
-
-        Args:
-            string (str): string to convert
-
-        Returns:
-            dict: json object
-        """
-        return json.loads(string)
 
     def score_game(self, game_results:dict) -> float:
         """scores the results of the game; 
@@ -118,9 +112,13 @@ class GameOptimizer(GenericOptimizer):
         """
         print("Scoring game...")
         score:float = 0.0
+        self.data.append({}) # add empty dict to data array
         # TODO weighted score?
+        index = 0
         for instance_result in results.values():
             score += self.score_game(instance_result)
+            self.data[-1][index] = score # store score for this instance
+            index += 1
         return score
     
     def obj_func(self, x, grad):
@@ -136,12 +134,14 @@ class GameOptimizer(GenericOptimizer):
         # update self.parameters with x
         # TODO measure iteration times to show data on graph?
         # TODO do we need to match parameter types? (e.g. int, float) can use rounding OR penalty function
+        self.parameter_evolution.append({})
         for i in range(self.parameters.size()):
             paramval = x[i]
             if self.parameters.get_param_types()[i] == "int":
                 paramval = round(paramval)
             print("setting", self.paramnames[i], "to", paramval)
             setattr(self.parameters, self.paramnames[i], paramval)
+            self.parameter_evolution[-1][i] = paramval
         return self.run()
     
     def optimize(self, delta:float = 0.01):
@@ -151,4 +151,23 @@ class GameOptimizer(GenericOptimizer):
             delta (float, optional): Relative tolerance on parameters. Defaults to 0.01.
         """
         super().optimize(delta) # TODO can we do this, or does nlopt object need additional game-specific setup?
-        
+
+    def plot_data(self):
+        """Plots the data stored in self.data
+        """
+        # scatter plot of team_damage_allies with labels
+        plt.xlabel("Iteration")
+        plt.ylabel("Total Team Damage (Allies)")
+        total_team_damage = [sum(list(instance.values())) for instance in self.data]
+        plt.scatter(range(len(total_team_damage)), total_team_damage)
+        for i, txt in enumerate(total_team_damage):
+            label = "("
+            for key in self.parameter_evolution[i]:
+                label += str(round(self.parameter_evolution[i][key], 2)) + "," # TODO assuming all parameters are numbers
+            label = label[:-1] + ")"
+            plt.annotate(label, (i, total_team_damage[i]))
+        plt.show()
+        # TODO think of other plots to show; 
+        # - parameter evolution over time?
+        # - parameter correlation with score? For each parameter? Or 3-D plot of 2 parameters and score?
+
