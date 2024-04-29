@@ -4,10 +4,9 @@ import time
 import nlopt
 
 class GenericOptimizer(ABC):
-    @abstractmethod
-    def __init__(self) -> None:
-        self.parameters = GenericParameters()
-        return NotImplementedError
+    def __init__(self, opt_algo=nlopt.LN_COBYLA, opt_algo_2 = None) -> None:
+        self.opt_algo = opt_algo
+        self.opt_algo_2 = opt_algo_2
     
     @abstractmethod
     def obj_func(self):
@@ -42,7 +41,10 @@ class GenericOptimizer(ABC):
         # start timer
         start_time = time.time()
         # NLopt setup
-        opt = nlopt.opt(nlopt.LN_COBYLA, self.parameters.size()) # TODO parameterize Opt. algorithm
+        opt = nlopt.opt(self.opt_algo, self.parameters.size()) # TODO parameterize Opt. algorithm
+        if self.opt_algo_2 is not None:
+            opt2 = nlopt.opt(self.opt_algo_2, self.parameters.size())
+            opt.set_local_optimizer(opt2)
         # TODO set nonlinear constraints for parameter types (https://nlopt.readthedocs.io/en/latest/NLopt_Python_Reference/#nonlinear-constraints)
         opt.set_lower_bounds(self.parameters.get_lower_bounds())
         opt.set_upper_bounds(self.parameters.get_upper_bounds())

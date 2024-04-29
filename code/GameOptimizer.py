@@ -11,7 +11,7 @@ import os
 import nlopt
 
 class GameOptimizer(GenericOptimizer):
-    def __init__(self, game_location:str, logs_location:str, ingame_instance_count:int = 4, timeout:int = 60):
+    def __init__(self, opt_algo=nlopt.LN_COBYLA, opt_algo_2 = None, game_location:str = "", logs_location:str = "", ingame_instance_count:int = 4, timeout:int = 60):
         """
         Initializes the GameOptimizer class.
 
@@ -22,6 +22,7 @@ class GameOptimizer(GenericOptimizer):
         - ingame_instance_count (int): The number of instances of the game to run in parallel.
         - timeout (int): The maximum time (seconds) to wait for a game instance to finish.
         """
+        super().__init__(opt_algo, opt_algo_2)
         self.game_location = game_location
         self.logs_location = logs_location
         self.ingame_instance_count = ingame_instance_count # can be used to run multiple instances of the game in parallel;
