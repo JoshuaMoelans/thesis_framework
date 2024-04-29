@@ -145,13 +145,13 @@ class GameOptimizer(GenericOptimizer):
             self.parameter_evolution[-1][i] = paramval
         return self.run()
     
-    def optimize(self, delta:float = 0.01):
-        """Optimizes the game by running it multiple times, scoring each run and adjusting the parameters.
+    # def optimize(self, delta:float = 0.01):
+    #     """Optimizes the game by running it multiple times, scoring each run and adjusting the parameters.
 
-        Args:
-            delta (float, optional): Relative tolerance on parameters. Defaults to 0.01.
-        """
-        super().optimize(delta) # TODO can we do this, or does nlopt object need additional game-specific setup?
+    #     Args:
+    #         delta (float, optional): Relative tolerance on parameters. Defaults to 0.01.
+    #     """
+    #     super().optimize(delta) # TODO can we do this, or does nlopt object need additional game-specific setup?
 
     def plot_data(self):
         """Plots the data stored in self.data
@@ -172,3 +172,13 @@ class GameOptimizer(GenericOptimizer):
         # - parameter evolution over time?
         # - parameter correlation with score? For each parameter? Or 3-D plot of 2 parameters and score?
 
+    def store_data(self):
+        """Stores the data in self.data to a file
+        """
+        os.makedirs('OUTPUT', exist_ok=True)  # Ensure the directory exists
+        for iteration, data in enumerate(self.data):
+            # add iteration number parameter values to data
+            data["parameters"] = self.parameter_evolution[iteration]
+            filename = f"OUTPUT/data_{iteration}.json"
+            with open(filename, "w") as f:
+                f.write(json.dumps(data))

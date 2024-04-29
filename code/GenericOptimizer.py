@@ -31,12 +31,14 @@ class GenericOptimizer(ABC):
         -5: "forced stop",
     }
 
-    def optimize(self, delta:float) -> None:
+    def optimize(self, xtol_rel:float, ftol_rel:float, maxeval:int) -> None:
         """optimizes the game by running it multiple times, scoring each run and adjusting the parameters.
         goes until change in scoring is less than delta
 
         Args:
-            delta (float, optional): minimal change required to keep adjusting parameters. Defaults to 0.1.
+            xtol_rel (float): minimal change required to keep adjusting parameters.
+            ftol_rel (float): relative tolerance on scoring.
+            maxeval (int): maximum number of evaluations.
         """
         # start timer
         start_time = time.time()
@@ -50,7 +52,9 @@ class GenericOptimizer(ABC):
         opt.set_upper_bounds(self.parameters.get_upper_bounds())
         opt.set_initial_step(self.parameters.get_step_size())
         opt.set_min_objective(self.obj_func) # minimize objective function
-        opt.set_xtol_rel(delta) # relative tolerance on parameters
+        opt.set_xtol_rel(xtol_rel) # relative tolerance on parameters
+        opt.set_ftol_rel(ftol_rel)
+        opt.set_maxeval(maxeval)
 
         # NLopt optimization
         x = opt.optimize(self.parameters.get_initial_values())
