@@ -4,7 +4,7 @@ import time
 from matplotlib import pyplot as plt
 from GenericOptimizer import GenericOptimizer
 from GameParameters import GameParameters
-from numpy import *
+import numpy as np
 import subprocess
 import os
 
@@ -69,12 +69,12 @@ class GameOptimizer(GenericOptimizer):
         # Run the game executable from game_location with the parameters as CL arguments
         # TODO we can parallelize this by running multiple instances of the game with different parameters? not sure if this speeds up learning
         subprocess.run([self.game_location,
-                         f"ngames={self.ingame_instance_count}",
-                         f"timeout={self.timeout}",
-                          "visible=false", # TODO make this parameter? think in training can be false
+                        f"ngames={self.ingame_instance_count}",
+                        f"timeout={self.timeout}",
+                        "visible=false",  # TODO make this parameter? think in training can be false
                         f"communication_count={self.parameters.communication_count}",
                         f"communication_delay={self.parameters.communication_delay}"
-                        ])
+                        ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL) # silence output for now TODO maybe add verbosity parameter/parse into file?
         
         # gather results from logs_location and put in result array
         # loop over files in logs_location
@@ -93,7 +93,6 @@ class GameOptimizer(GenericOptimizer):
         Returns:
             float: scoring of the game for given set of parameters
         """
-        print("Scoring game...")
         score:float = 0.0
         # TODO weighted score of different metrics found in log
         score += game_results["team_damage"]["allies"]
@@ -113,13 +112,18 @@ class GameOptimizer(GenericOptimizer):
         """
         print("Scoring game...")
         score:float = 0.0
+
         self.data.append({}) # add empty dict to data array
         # TODO weighted score?
         index = 0
+        instance_scores =[]
         for instance_result in results.values():
-            score += self.score_game(instance_result)
-            self.data[-1][index] = score # store score for this instance
+            instance_score = self.score_game(instance_result)
+            instance_scores.append(instance_score)
+            self.data[-1][index] = instance_score # store score for this instance
             index += 1
+        score = np.mean(np.array(instance_scores))  # return mean score of all instances
+        print("score:", score)
         return score
     
     def obj_func(self, x, grad):
@@ -158,15 +162,17 @@ class GameOptimizer(GenericOptimizer):
         """
         # scatter plot of team_damage_allies with labels
         plt.xlabel("Iteration")
-        plt.ylabel("Total Team Damage (Allies)")
+        plt.ylabel("Average Team Damage per Instance (Allies)")
+        avg_team_damage = [np.mean(list(instance.values())) for instance in self.data]
         total_team_damage = [sum(list(instance.values())) for instance in self.data]
-        plt.scatter(range(len(total_team_damage)), total_team_damage)
-        for i, txt in enumerate(total_team_damage):
+
+        plt.scatter(range(len(avg_team_damage)), avg_team_damage)
+        for i, txt in enumerate(avg_team_damage):
             label = "("
             for key in self.parameter_evolution[i]:
                 label += str(round(self.parameter_evolution[i][key], 2)) + "," # TODO assuming all parameters are numbers
             label = label[:-1] + ")"
-            plt.annotate(label, (i, total_team_damage[i]))
+            plt.annotate(label, (i, avg_team_damage[i]))
         plt.show()
         # TODO think of other plots to show; 
         # - parameter evolution over time?
