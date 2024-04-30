@@ -53,7 +53,6 @@ class GameOptimizer(GenericOptimizer):
                             instance_number = file.split('_')[2]  # Extract instance number from file name
                             if instance_number in results:
                                 continue  # Skip this file if its instance has been processed (alphabetically; GAMEOVER has priority over TIMEOUT)
-                            print("file_path:", file_path)
                             with open(file_path, "r") as f:
                                 results[instance_number] = json.loads(f.read())
         return results
@@ -98,14 +97,14 @@ class GameOptimizer(GenericOptimizer):
         score:float = 0.0
         # TODO check scoring weights
         alliesAlive = 0
-        for unit in game_results["allies"]:
+        for unit in game_results["allies"].values():
             if unit["health"] > 0:
                 alliesAlive += 1
         if alliesAlive == 0:
             score += 1000 # high penalty for losing all allies
 
         enemiesAlive = 0
-        for unit in game_results["enemies"]:
+        for unit in game_results["enemies"].values():
             if unit["health"] > 0:
                 enemiesAlive += 1
         if enemiesAlive != 0:
