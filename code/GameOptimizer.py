@@ -96,8 +96,24 @@ class GameOptimizer(GenericOptimizer):
             float: scoring of the game for given set of parameters
         """
         score:float = 0.0
-        # TODO weighted score of different metrics found in log
-        score += game_results["team_damage"]["allies"]
+        # TODO check scoring weights
+        alliesAlive = 0
+        for unit in game_results["allies"]:
+            if unit["health"] > 0:
+                alliesAlive += 1
+        if alliesAlive == 0:
+            score += 1000 # high penalty for losing all allies
+
+        enemiesAlive = 0
+        for unit in game_results["enemies"]:
+            if unit["health"] > 0:
+                enemiesAlive += 1
+        if enemiesAlive != 0:
+            score += 10 * enemiesAlive # weighted penalty for keeping more enemies alive
+        else:
+            score -= 500 # bonus for killing all enemies
+
+        score += game_results["team_damage"]["allies"] # penalty for team-damaging allies
         return score
     
     def score(self, results:dict) -> float:
@@ -139,12 +155,10 @@ class GameOptimizer(GenericOptimizer):
             _type_: scoring of the current iteration
         """
         # update self.parameters with x
-        # TODO measure iteration times to show data on graph?
-        # TODO do we need to match parameter types? (e.g. int, float) can use rounding OR penalty function
         self.parameter_evolution.append({})
         for i in range(self.parameters.size()):
             paramval = x[i]
-            if self.parameters.get_param_types()[i] == "int":
+            if self.parameters.get_param_types()[i] == "int": # round to nearest integer if parameter is an integer
                 paramval = round(paramval)
             print("setting", self.paramnames[i], "to", paramval)
             setattr(self.parameters, self.paramnames[i], paramval)
@@ -164,17 +178,16 @@ class GameOptimizer(GenericOptimizer):
         """
         # scatter plot of team_damage_allies with labels
         plt.xlabel("Iteration")
-        plt.ylabel("Average Team Damage per Instance (Allies)")
-        avg_team_damage = [np.mean(list(instance.values())) for instance in self.data]
-        total_team_damage = [sum(list(instance.values())) for instance in self.data]
+        plt.ylabel("Average Instance Score")
+        avg_instance_score = [np.mean(list(instance.values())) for instance in self.data]
 
-        plt.scatter(range(len(avg_team_damage)), avg_team_damage)
-        for i, txt in enumerate(avg_team_damage):
+        plt.scatter(range(len(avg_instance_score)), avg_instance_score)
+        for i, txt in enumerate(avg_instance_score):
             label = "("
             for key in self.parameter_evolution[i]:
                 label += str(round(self.parameter_evolution[i][key], 2)) + "," # TODO assuming all parameters are numbers
             label = label[:-1] + ")"
-            plt.annotate(label, (i, avg_team_damage[i]))
+            plt.annotate(label, (i, avg_instance_score[i]))
         plt.show()
         # TODO think of other plots to show; 
         # - parameter evolution over time?
@@ -184,6 +197,11 @@ class GameOptimizer(GenericOptimizer):
         """Stores the data in self.data to a file
         """
         os.makedirs('OUTPUT', exist_ok=True)  # Ensure the directory exists
+        # clear out old files
+        for file in os.listdir("OUTPUT"):
+            file_path = os.path.join("OUTPUT", file)
+            if os.path.isfile(file_path):
+                os.remove(file_path)
         for iteration, data in enumerate(self.data):
             # add iteration number parameter values to data
             data["parameters"] = self.parameter_evolution[iteration]
