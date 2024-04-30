@@ -6,6 +6,7 @@ from GenericOptimizer import GenericOptimizer
 from GameParameters import GameParameters
 import numpy as np
 import subprocess
+import subprocess as sp
 import os
 
 import nlopt
@@ -68,13 +69,14 @@ class GameOptimizer(GenericOptimizer):
 
         # Run the game executable from game_location with the parameters as CL arguments
         # TODO we can parallelize this by running multiple instances of the game with different parameters? not sure if this speeds up learning
+        #       -> might give better results to run with same parameters & taking average of multiple (parallel) runs
         subprocess.run([self.game_location,
                         f"ngames={self.ingame_instance_count}",
                         f"timeout={self.timeout}",
-                        "visible=false",  # TODO make this parameter? think in training can be false
+                        "visible=false",
                         f"communication_count={self.parameters.communication_count}",
                         f"communication_delay={self.parameters.communication_delay}"
-                        ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL) # silence output for now TODO maybe add verbosity parameter/parse into file?
+                        ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL) # silence output for now TODO maybe add verbosity parameter/parse into file?) 
         
         # gather results from logs_location and put in result array
         # loop over files in logs_location
