@@ -6,7 +6,8 @@ def test_score_reading(game:GameOptimizer):
 
 if __name__ == '__main__':
     game_location = r"./game/game.exe"
-    logs_location = r"C:\Users\Joshua\AppData\Roaming\Godot\app_userdata\Godot Exploration - 2d\logs"
+    logs_location = r"C:\Users\Joshua\AppData\Roaming\Godot\app_userdata\Godot Exploration - 2d\logs" # desktop
+    logs_location = r"C:\Users\user\AppData\Roaming\Godot\app_userdata\Godot Exploration - 2d\logs" # laptop
     game = GameOptimizer(opt_algo=GN_MLSL, opt_algo_2=LN_COBYLA, game_location=game_location, logs_location=logs_location, ingame_instance_count=25, timeout=35)
     # game = GameOptimizer(opt_algo=LN_COBYLA, game_location=game_location, logs_location=logs_location, ingame_instance_count=16, timeout=35)
     # test_score_reading(game) # TODO restructure this test
