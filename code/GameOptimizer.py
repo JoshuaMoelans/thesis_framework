@@ -168,6 +168,7 @@ class GameOptimizer(GenericOptimizer):
         instance_wlrs = {'win': 0, 'loss': 0, 'draw': 0, 'nan': 0}
         for instance_result in results.values():
             instance_score = self.score_game(instance_result)
+            instance_scores.append(instance_score)
             instance_wlr = self.wlr_game(instance_result)
             instance_wlrs = {x : instance_wlrs[x] + instance_wlr[x] for x in instance_wlr}
             self.data[-1][index] = instance_score # store score for this instance
