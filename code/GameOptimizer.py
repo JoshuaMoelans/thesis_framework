@@ -33,6 +33,7 @@ class GameOptimizer(GenericOptimizer):
         # set up data collection
         self.data = [] # keep track of data for graphing; one entry per iteration
         self.parameter_evolution = [] # keep track of parameter values for graphing; one entry per iteration
+        self.wlr = [] # keep track of win/loss ratio for graphing; one entry per iteration
 
     def clean_logs(self):
         """cleans out the logs_location directory
@@ -116,6 +117,36 @@ class GameOptimizer(GenericOptimizer):
         score += game_results["team_damage"]["allies"] # penalty for team-damaging allies
         return score
     
+    def wlr_game(self, game_results:dict) -> dict[str, float]:
+        """calculates the win-loss-rate of the game;
+
+        Args:
+            game_results (dict): dictionary containing data gathered from game run
+
+        Returns:
+            dict[str, float]: {'win': win_rate, 'loss': loss_rate, 'draw': draw_rate, 'nan': nan_rate}
+        """
+        wlr = {'win': 0, 'loss': 0, 'draw': 0, 'nan': 0}
+        alliesAlive = 0
+        for unit in game_results["allies"].values():
+            if unit["health"] > 0:
+                alliesAlive += 1
+        if alliesAlive == 0:
+            wlr['loss'] += 1  # loss
+        enemiesAlive = 0
+        for unit in game_results["enemies"].values():
+            if unit["health"] > 0:
+                enemiesAlive += 1
+        if enemiesAlive == 0:
+            wlr['win'] += 1  # win
+        if alliesAlive == 0 and enemiesAlive == 0:
+            wlr['draw'] += 1  # draw
+        if alliesAlive != 0 and enemiesAlive != 0:
+            wlr['nan'] += 1  # game not ended
+
+        return wlr
+        
+    
     def score(self, results:dict) -> float:
         """scores the results of the game; 
         do this here to more easily change scoring function (instead of baking it into the game)
@@ -132,14 +163,16 @@ class GameOptimizer(GenericOptimizer):
         score:float = 0.0
 
         self.data.append({}) # add empty dict to data array
-        # TODO weighted score?
         index = 0
-        instance_scores =[]
+        instance_scores = []
+        instance_wlrs = {'win': 0, 'loss': 0, 'draw': 0, 'nan': 0}
         for instance_result in results.values():
             instance_score = self.score_game(instance_result)
-            instance_scores.append(instance_score)
+            instance_wlr = self.wlr_game(instance_result)
+            instance_wlrs = {x : instance_wlrs[x] + instance_wlr[x] for x in instance_wlr}
             self.data[-1][index] = instance_score # store score for this instance
             index += 1
+        self.wlr.append(instance_wlrs)
         score = np.mean(np.array(instance_scores))  # return mean score of all instances
         print("score:", score)
         return score
@@ -192,6 +225,22 @@ class GameOptimizer(GenericOptimizer):
         # TODO think of other plots to show; 
         # - parameter evolution over time?
         # - parameter correlation with score? For each parameter? Or 3-D plot of 2 parameters and score?
+
+    def store_wlrs(self):
+        """
+        stores the win-loss-rates in a file
+        """
+        os.makedirs('OUTPUT_WLR', exist_ok=True)
+        for file in os.listdir("OUTPUT_WLR"):
+            file_path = os.path.join("OUTPUT_WLR", file)
+            if os.path.isfile(file_path):
+                os.remove(file_path)
+        for iteration, wlr in enumerate(self.wlr):
+            wlr["parameters"] = self.parameter_evolution[iteration]
+            # add iteration number parameter values to data
+            filename = f"OUTPUT_WLR/wlr_{iteration}.json"
+            with open(filename, "w") as f:
+                f.write(json.dumps(wlr))
 
     def store_data(self):
         """Stores the data in self.data to a file
