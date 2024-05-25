@@ -73,6 +73,7 @@ class GameOptimizer(GenericOptimizer):
                         f"ngames={self.ingame_instance_count}",
                         f"timeout={self.timeout}",
                         "visible=false",
+                        f"start_minimized=true",  # minimize the game window upon start
                         f"communication_count={self.parameters.communication_count}",
                         f"communication_delay={self.parameters.communication_delay}"
                         ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL) # silence output for now TODO maybe add verbosity parameter/parse into file?) 
