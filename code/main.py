@@ -28,7 +28,7 @@ if __name__ == '__main__':
     # game = GameOptimizer(opt_algo=LN_COBYLA, game_location=game_location, logs_location=logs_location, ingame_instance_count=16, timeout=35)
     # test_score_reading(game) # TODO restructure this test
     
-    game.optimize(xtol_rel=0.1, ftol_rel=0.1, maxeval=30)
+    game.optimize(xtol_rel=0.1, ftol_rel=0.1, maxeval=20)
     game.plot_data()
     game.store_data()
     game.store_wlrs()
