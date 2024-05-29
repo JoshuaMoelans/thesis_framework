@@ -28,12 +28,15 @@ class GameOptimizer(GenericOptimizer):
         self.logs_location = logs_location
         self.ingame_instance_count = ingame_instance_count # can be used to run multiple instances of the game in parallel;
         self.timeout = timeout
-        self.parameters = GameParameters()
+        self.set_parameters() # extract to separate function for reusability
         self.paramnames = [key for key in self.parameters.__dict__] # indexable list of parameter names
         # set up data collection
         self.data = [] # keep track of data for graphing; one entry per iteration
         self.parameter_evolution = [] # keep track of parameter values for graphing; one entry per iteration
         self.wlr = [] # keep track of win/loss ratio for graphing; one entry per iteration
+
+    def set_parameters(self):
+        self.parameters = GameParameters()
 
     def clean_logs(self):
         """cleans out the logs_location directory
@@ -57,16 +60,8 @@ class GameOptimizer(GenericOptimizer):
                             with open(file_path, "r") as f:
                                 results[instance_number] = json.loads(f.read())
         return results
-
-    def run(self) -> float:
-        """ runs the game with the stored internal parameters
-
-        Returns:
-            float: scoring of the game
-        """
-        print("Running game...")
-        self.clean_logs() # clean out logs_location directory
-
+    
+    def run_subprocess(self):
         # Run the game executable from game_location with the parameters as CL arguments
         # TODO we can parallelize this by running multiple instances of the game with different parameters? not sure if this speeds up learning
         #       -> might give better results to run with same parameters & taking average of multiple (parallel) runs
@@ -78,7 +73,18 @@ class GameOptimizer(GenericOptimizer):
                         f"communication_count={self.parameters.communication_count}",
                         f"communication_delay={self.parameters.communication_delay}"
                         ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL) # silence output for now TODO maybe add verbosity parameter/parse into file?) 
-        
+    
+    def run(self) -> float:
+        """ runs the game with the stored internal parameters
+
+        Returns:
+            float: scoring of the game
+        """
+        print("Running game...")
+        self.clean_logs() # clean out logs_location directory
+
+        self.run_subprocess() # extracted to separate function for reusability
+
         # gather results from logs_location and put in result array
         # loop over files in logs_location
         results = self.store_results()
