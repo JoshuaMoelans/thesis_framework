@@ -7,6 +7,7 @@ class GenericOptimizer(ABC):
     def __init__(self, opt_algo=nlopt.LN_COBYLA, opt_algo_2 = None) -> None:
         self.opt_algo = opt_algo
         self.opt_algo_2 = opt_algo_2
+        self.parameters = None
     
     @abstractmethod
     def obj_func(self):
