@@ -1,5 +1,6 @@
 import subprocess
 from GameOptimizer import GameOptimizer
+from VisionConeOptimizer import VisionConeOptimizer
 from nlopt import LN_COBYLA, GN_MLSL
 
 def test_score_reading(game:GameOptimizer):
@@ -17,6 +18,8 @@ def test_run_game(game_loc, inst_count, timeout, comm_count, comm_delay):
         
 
 if __name__ == '__main__':
+
+    
     game_location = r"./game/game.exe"
     # test_run_game(game_location, 25, 999, 3, 0.2)
     # input("Press Enter to continue...")
@@ -24,11 +27,12 @@ if __name__ == '__main__':
 
     logs_location = r"C:\Users\Joshua\AppData\Roaming\Godot\app_userdata\Godot Exploration - 2d\logs" # desktop
     # logs_location = r"C:\Users\user\AppData\Roaming\Godot\app_userdata\Godot Exploration - 2d\logs" # laptop
-    game = GameOptimizer(opt_algo=GN_MLSL, opt_algo_2=LN_COBYLA, game_location=game_location, logs_location=logs_location, ingame_instance_count=25, timeout=60)
+    # game = GameOptimizer(opt_algo=GN_MLSL, opt_algo_2=LN_COBYLA, game_location=game_location, logs_location=logs_location, ingame_instance_count=25, timeout=60)
+    game = VisionConeOptimizer(opt_algo=GN_MLSL, opt_algo_2=LN_COBYLA, game_location=game_location, logs_location=logs_location, ingame_instance_count=25, timeout=60)
     # game = GameOptimizer(opt_algo=LN_COBYLA, game_location=game_location, logs_location=logs_location, ingame_instance_count=16, timeout=35)
     # test_score_reading(game) # TODO restructure this test
     
-    game.optimize(xtol_rel=0.1, ftol_rel=0.1, maxeval=20)
+    game.optimize(xtol_rel=0.1, ftol_rel=0.1, maxeval=60)
     game.plot_data()
     game.store_data()
     game.store_wlrs()
